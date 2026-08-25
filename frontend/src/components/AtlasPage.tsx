@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.ts';
 import GraphCanvas from './GraphCanvas.tsx';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
+import DevInfo from './DevInfo.tsx';
 import type { GraphOverview, SkillSummary, PrerequisiteRow } from '../types.ts';
 
 const ALL_LABELS = ['Skill', 'Role', 'Course'];
@@ -74,7 +75,7 @@ export default function AtlasPage() {
         <h1 className="page-title">The skill graph</h1>
         <p className="page-lede">
           Every circle is a skill; amber diamonds are roles. Pick a skill on the right to trace every
-          prerequisite that leads to it, at any depth — a single Cypher traversal lights up the whole route.
+          prerequisite that leads to it, at any depth.
         </p>
       </div>
 
@@ -147,13 +148,13 @@ export default function AtlasPage() {
           )}
 
           {chain && chain.length > 0 && (
-            <>
-              <div className="section-title" style={{ marginTop: 20 }}>Cypher behind this</div>
+            <DevInfo>
+              <div className="section-title">Cypher behind this</div>
               <div className="query-box">{`MATCH path = (root:Skill)-[:PREREQUISITE_OF*1..8]->(target:Skill {name: $skillName})
 WITH root, min(length(path)) AS depth
 RETURN root.name AS skill, depth
 ORDER BY depth`}</div>
-            </>
+            </DevInfo>
           )}
         </div>
       </div>

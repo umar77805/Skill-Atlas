@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.ts';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
+import DevInfo from './DevInfo.tsx';
+import { useDevMode } from '../DevModeContext.tsx';
 import type { BridgeSkillRow } from '../types.ts';
 
 export default function InsightsPage() {
+  const { devMode } = useDevMode();
   const [minRoles, setMinRoles] = useState(3);
   const [rows, setRows] = useState<BridgeSkillRow[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,7 +47,7 @@ export default function InsightsPage() {
         </div>
       </div>
 
-      <div className="grid-2">
+      <div className={devMode ? 'grid-2' : undefined}>
         <div className="panel">
           <div className="section-title">Results</div>
           {loading && <LoadingBlock label="Scanning role requirements…" />}
@@ -67,23 +70,25 @@ export default function InsightsPage() {
           )}
         </div>
 
-        <div className="panel">
-          <div className="section-title">Why this needs a graph</div>
-          <p className="page-lede" style={{ marginBottom: 16 }}>
-            This asks for skills reachable through an unbounded chain of prerequisites, filtered by an anti-join
-            against direct requirements, then grouped with a having-count. In SQL that's a recursive CTE for the
-            closure, a LEFT JOIN / IS NULL for the anti-join, and a GROUP BY HAVING on top — three separate
-            techniques stitched together. Cypher expresses the whole thing as one pattern match.
-          </p>
-          <div className="section-title">Cypher</div>
-          <div className="query-box">{`MATCH (s:Skill)-[:PREREQUISITE_OF*1..8]->(needed:Skill)
+        <DevInfo>
+          <div className="panel">
+            <div className="section-title">Why this needs a graph</div>
+            <p className="page-lede" style={{ marginBottom: 16 }}>
+              This asks for skills reachable through an unbounded chain of prerequisites, filtered by an anti-join
+              against direct requirements, then grouped with a having-count. In SQL that's a recursive CTE for the
+              closure, a LEFT JOIN / IS NULL for the anti-join, and a GROUP BY HAVING on top — three separate
+              techniques stitched together. Cypher expresses the whole thing as one pattern match.
+            </p>
+            <div className="section-title">Cypher</div>
+            <div className="query-box">{`MATCH (s:Skill)-[:PREREQUISITE_OF*1..8]->(needed:Skill)
       <-[:REQUIRES]-(r:Role)
 WHERE NOT EXISTS { MATCH (:Role)-[:REQUIRES]->(s) }
 WITH s, count(DISTINCT r) AS rolesUnlocked
 WHERE rolesUnlocked >= $minRoles
 RETURN s.name, rolesUnlocked
 ORDER BY rolesUnlocked DESC`}</div>
-        </div>
+          </div>
+        </DevInfo>
       </div>
     </div>
   );

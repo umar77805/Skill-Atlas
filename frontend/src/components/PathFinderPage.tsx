@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.ts';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
+import DevInfo from './DevInfo.tsx';
 import type { PersonSummary, RoleSummary, SkillGapRow, LearningPathRow } from '../types.ts';
 
 export default function PathFinderPage() {
@@ -123,6 +124,33 @@ export default function PathFinderPage() {
             )}
           </div>
         </div>
+      )}
+
+      {!loading && !error && gap && (
+        <DevInfo>
+          <div className="panel" style={{ marginTop: 20 }}>
+            <div className="section-title">Why this needs a graph</div>
+            <p className="page-lede" style={{ marginBottom: 16 }}>
+              Missing skills come from one pattern match: everything the role requires that the learner doesn't
+              already have, with matching courses collected in the same query. The learning order comes from a
+              second traversal — for each missing skill, count how many other missing skills still sit upstream
+              of it via the same variable-length prerequisite path, then sort by that count. That gives a
+              learnable order without ever materialising a full topological sort.
+            </p>
+            <div className="section-title">Skill gap</div>
+            <div className="query-box">{`MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
+WHERE NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(s) }
+OPTIONAL MATCH (c:Course)-[:TEACHES]->(s)
+RETURN s.name AS skill, req.importance AS importance, collect(DISTINCT c.title) AS courses`}</div>
+            <div className="section-title" style={{ marginTop: 16 }}>Ordered learning path</div>
+            <div className="query-box">{`MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
+WHERE NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(target) }
+OPTIONAL MATCH (blocker:Skill)-[:PREREQUISITE_OF*1..8]->(target)
+WHERE NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(blocker) }
+WITH target, count(DISTINCT blocker) AS blockedBy
+RETURN target.name AS skill, blockedBy ORDER BY blockedBy ASC`}</div>
+          </div>
+        </DevInfo>
       )}
     </div>
   );

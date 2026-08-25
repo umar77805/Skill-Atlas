@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router';
 import { api } from './api.ts';
 import AppRoutes from './routes.tsx';
+import { useDevMode } from './DevModeContext.tsx';
 
 export default function App() {
   const [connected, setConnected] = useState<boolean | null>(null); // null = checking
+  const { devMode, setDevMode } = useDevMode();
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +39,15 @@ export default function App() {
             <span className={`status-dot ${connected ? 'on' : connected === false ? 'off' : ''}`} />
             {connected === null ? 'Checking database…' : connected ? 'CognoDB connected' : 'CognoDB unreachable'}
           </div>
+          <button
+            type="button"
+            className={`toggle-chip${devMode ? ' on' : ''}`}
+            style={{ marginTop: 10 }}
+            onClick={() => setDevMode(!devMode)}
+            aria-pressed={devMode}
+          >
+            Dev info: {devMode ? 'On' : 'Off'}
+          </button>
         </div>
       </nav>
       <main className="main">

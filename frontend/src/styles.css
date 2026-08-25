@@ -310,6 +310,26 @@ button {
   white-space: pre;
 }
 
+.dev-info {
+  position: relative;
+  margin-top: 20px;
+  padding: 16px 16px 4px;
+  border: 1px dashed var(--violet);
+  border-radius: var(--radius-sm);
+  background: rgba(143, 127, 232, 0.05);
+}
+.dev-info-badge {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  background: var(--ink);
+  padding: 0 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--violet);
+}
+
 .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); }
 .legend-swatch { width: 10px; height: 10px; border-radius: 50%; }
