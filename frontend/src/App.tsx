@@ -3,10 +3,22 @@ import { NavLink } from 'react-router';
 import { api } from './api.ts';
 import AppRoutes from './routes.tsx';
 import { useDevMode } from './DevModeContext.tsx';
+import AssignmentNotice from './components/AssignmentNotice.tsx';
+
+const TOGGLE_SEEN_KEY = 'skillatlas.devToggleSeen';
 
 export default function App() {
   const [connected, setConnected] = useState<boolean | null>(null); // null = checking
   const { devMode, setDevMode } = useDevMode();
+  const [toggleSeen, setToggleSeen] = useState(() => localStorage.getItem(TOGGLE_SEEN_KEY) === 'true');
+
+  function handleToggleDevMode() {
+    setDevMode(!devMode);
+    if (!toggleSeen) {
+      localStorage.setItem(TOGGLE_SEEN_KEY, 'true');
+      setToggleSeen(true);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -18,6 +30,7 @@ export default function App() {
 
   return (
     <div className="shell">
+      <AssignmentNotice />
       <nav className="nav-rail">
         <div className="brand">
           <div className="brand-mark">Skill<span>Atlas</span></div>
@@ -39,15 +52,25 @@ export default function App() {
             <span className={`status-dot ${connected ? 'on' : connected === false ? 'off' : ''}`} />
             {connected === null ? 'Checking database…' : connected ? 'CognoDB connected' : 'CognoDB unreachable'}
           </div>
-          <button
-            type="button"
-            className={`toggle-chip${devMode ? ' on' : ''}`}
-            style={{ marginTop: 10 }}
-            onClick={() => setDevMode(!devMode)}
-            aria-pressed={devMode}
-          >
-            Dev info: {devMode ? 'On' : 'Off'}
-          </button>
+          <div className="dev-toggle-row">
+            <button
+              type="button"
+              className={`toggle-chip${devMode ? ' on' : ''}${!toggleSeen ? ' pulse' : ''}`}
+              onClick={handleToggleDevMode}
+              aria-pressed={devMode}
+            >
+              Dev info: {devMode ? 'On' : 'Off'}
+            </button>
+            <span
+              className="info-icon"
+              tabIndex={0}
+              role="img"
+              aria-label="Dev info toggle: when on, each page shows the raw Cypher query behind its results."
+              data-tooltip="When on, each page shows the raw Cypher query behind its results."
+            >
+              i
+            </span>
+          </div>
         </div>
       </nav>
       <main className="main">
