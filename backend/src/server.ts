@@ -44,23 +44,23 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.get('/api/skills', handle(() => q.listSkills()));
-app.get('/api/skills/:name/prerequisites', handle((req) => q.getPrerequisiteChain(req.params.name)));
+app.get('/api/skills/:name/prerequisites', handle((req) => q.getPrerequisiteChain(req.params.name as string)));
 
 app.get('/api/roles', handle(() => q.listRoles()));
 app.get('/api/roles/:title/gap', handle((req) => {
   const person = req.query.person as string;
   if (!person) throw new Error('Missing required query param: person');
-  return q.getSkillGap(person, req.params.title);
+  return q.getSkillGap(person, req.params.title as string);
 }));
 app.get('/api/roles/:title/path', handle((req) => {
   const person = req.query.person as string;
   if (!person) throw new Error('Missing required query param: person');
-  return q.getLearningPath(person, req.params.title);
+  return q.getLearningPath(person, req.params.title as string);
 }));
 
 app.get('/api/people', handle(() => q.listPeople()));
 app.get('/api/people/:name', handle(async (req) => {
-  const person = await q.getPersonDetail(req.params.name);
+  const person = await q.getPersonDetail(req.params.name as string);
   if (!person) {
     const err = new Error(`No person named "${req.params.name}"`) as Error & { status?: number };
     err.status = 404;
