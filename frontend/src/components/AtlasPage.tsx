@@ -89,7 +89,7 @@ export default function AtlasPage() {
               highlighted={highlighted}
               selectedId={nameToId.get(selectedSkill)}
               visibleLabels={visibleLabels}
-              onNodeClick={(n) => n.label === 'Skill' && n.name && loadChain(n.name)}
+              onNodeClick={(n) => n.label === 'Skill' && n.name && loadChain(n.name === selectedSkill ? '' : n.name)}
             />
           )}
           <div className="filter-toggles">
@@ -104,7 +104,7 @@ export default function AtlasPage() {
             ))}
           </div>
           <div className="legend">
-            <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--amber)' }} /> Selected / on route</div>
+            <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--violet)' }} /> Selected / on route</div>
             <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--panel-raised)', border: '1.5px solid var(--teal)' }} /> Skill</div>
             <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--amber)' }} /> Role</div>
           </div>

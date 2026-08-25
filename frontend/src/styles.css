@@ -11,6 +11,7 @@
   --amber-dim: #6b5527;
   --teal: #3fc1b0;
   --coral: #e1614d;
+  --violet: #8f7fe8;
 
   --display: 'Fraunces', Georgia, serif;
   --body: 'Inter', system-ui, -apple-system, sans-serif;
@@ -320,11 +321,34 @@ button {
   overflow: hidden;
 }
 
+.graph-canvas-wrap {
+  position: relative;
+}
+
+.graph-reset-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text-dim);
+  transition: all 0.15s ease;
+}
+.graph-reset-btn:hover { color: var(--text); border-color: var(--teal); }
+
 .graph-svg {
   width: 100%;
   height: auto;
   display: block;
+  cursor: grab;
+  touch-action: none;
 }
+.graph-svg.panning { cursor: grabbing; }
 
 .graph-edge {
   stroke: var(--line);
@@ -333,9 +357,9 @@ button {
   transition: stroke 0.25s ease, opacity 0.25s ease, stroke-width 0.25s ease;
 }
 .graph-edge.lit {
-  stroke: var(--amber);
-  stroke-width: 2;
-  opacity: 0.95;
+  stroke: var(--violet);
+  stroke-width: 2.5;
+  opacity: 1;
 }
 
 .graph-node circle {
@@ -343,22 +367,29 @@ button {
   stroke: var(--text-faint);
   stroke-width: 1.5;
   transition: fill 0.25s ease, stroke 0.25s ease, r 0.15s ease;
-  cursor: pointer;
+  cursor: grab;
 }
 .graph-node:hover circle { stroke: var(--teal); }
 .graph-node.label-Skill circle { stroke: var(--teal); }
 .graph-node.label-Role circle { fill: var(--amber); stroke: var(--amber); }
 .graph-node.label-Course circle { fill: var(--panel); stroke: var(--text-faint); }
 .graph-node.label-Person circle { fill: var(--coral); stroke: var(--coral); }
-.graph-node.lit circle { fill: var(--amber); stroke: var(--amber); }
-.graph-node.selected circle { stroke: var(--text); stroke-width: 2; }
+.graph-node.lit circle { fill: var(--violet); stroke: var(--violet); }
+.graph-node.selected circle { stroke: var(--text); stroke-width: 2.5; }
 
 .graph-label {
   font-family: var(--mono);
   font-size: 10.5px;
   fill: var(--text-dim);
+  opacity: 0;
   pointer-events: none;
+  transition: opacity 0.15s ease;
 }
+.graph-node:hover .graph-label,
+.graph-node:focus-visible .graph-label,
+.graph-node.label-Role .graph-label,
+.graph-node.lit .graph-label,
+.graph-node.selected .graph-label { opacity: 1; }
 .graph-node.lit .graph-label,
 .graph-node.selected .graph-label { fill: var(--text); }
 

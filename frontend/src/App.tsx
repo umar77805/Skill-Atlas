@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, NavLink } from 'react-router';
+import { NavLink } from 'react-router';
 import { api } from './api.ts';
-import AtlasPage from './components/AtlasPage.tsx';
-import PathFinderPage from './components/PathFinderPage.tsx';
-import InsightsPage from './components/InsightsPage.tsx';
+import AppRoutes from './routes.tsx';
 
 export default function App() {
   const [connected, setConnected] = useState<boolean | null>(null); // null = checking
@@ -42,11 +40,7 @@ export default function App() {
         </div>
       </nav>
       <main className="main">
-        <Routes>
-          <Route path="/" element={<AtlasPage />} />
-          <Route path="/path" element={<PathFinderPage />} />
-          <Route path="/insights" element={<InsightsPage />} />
-        </Routes>
+        <AppRoutes />
       </main>
     </div>
   );
