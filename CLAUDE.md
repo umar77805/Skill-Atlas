@@ -37,7 +37,7 @@ No test suite or linter is currently configured in either package.
 - `queries.ts` — every Cypher query the app runs, one exported function each, all parameterized and typed against `types.ts`.
 - `types.ts` — shared row/DTO interfaces matching each query's Cypher `RETURN` shape; used to parameterize `runQuery<T>()`.
 - `server.ts` — Express app, CORS, and route registration. A global middleware checks `isConnected()` on every request (except `/api/health`) and returns a clean `503` instead of letting a driver exception bubble up, so the DB-unreachable state is always explicit in the API response. Note: `/api/people/:name` throws a 404-flagged error on a missing person, but the `handle()` wrapper currently always responds `500` — a pre-existing bug, not yet fixed.
-- `seed.ts` — loads the fixed seed dataset (30 skills, 29 prerequisite edges, 30 courses, 10 roles, 2 demo learners) into a fresh CognoDB instance.
+- `seed.ts` — loads the fixed seed dataset (32 skills, 31 prerequisite edges, 31 courses, 10 roles, 2 demo learners) into a fresh CognoDB instance.
 
 **Frontend** (`frontend/src/`) is a Vite + React 19 app (TypeScript, `.tsx`/`.ts`) with client-side routing via `react-router` (the v7 package — `react-router-dom` was collapsed into it; import routing APIs from `'react-router'`, not `'react-router-dom'`):
 - `types.ts` — DTOs mirroring the backend's `types.ts` (intentionally duplicated — no shared package between the two independent npm projects).

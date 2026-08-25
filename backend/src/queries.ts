@@ -107,10 +107,11 @@ export async function getPrerequisiteChain(skillName: string): Promise<Prerequis
 // --- Skill-gap analysis for a learner against a role ------------------------
 export async function getSkillGap(personName: string, roleTitle: string): Promise<SkillGapRow[]> {
   return runQuery<SkillGapRow>(
-    `MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
-     WHERE NOT EXISTS {
-       MATCH (:Person {name: $personName})-[:HAS_SKILL]->(s)
-     }
+    `MATCH (p:Person {name: $personName})
+     OPTIONAL MATCH (p)-[:HAS_SKILL]->(known:Skill)
+     WITH collect(known.name) AS knownNames
+     MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
+     WHERE NOT s.name IN knownNames
      OPTIONAL MATCH (c:Course)-[:TEACHES]->(s)
      RETURN s.name AS skill, s.category AS category, req.importance AS importance,
             collect(DISTINCT c.title) AS courses
@@ -126,13 +127,13 @@ export async function getSkillGap(personName: string, roleTitle: string): Promis
 // a query that would require several recursive joins in a relational schema.
 export async function getLearningPath(personName: string, roleTitle: string): Promise<LearningPathRow[]> {
   return runQuery<LearningPathRow>(
-    `MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
-     WHERE NOT EXISTS {
-       MATCH (:Person {name: $personName})-[:HAS_SKILL]->(target)
-     }
+    `MATCH (p:Person {name: $personName})
+     OPTIONAL MATCH (p)-[:HAS_SKILL]->(known:Skill)
+     WITH collect(known.name) AS knownNames
+     MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
+     WHERE NOT target.name IN knownNames
      OPTIONAL MATCH (blocker:Skill)-[:PREREQUISITE_OF*1..8]->(target)
-     WHERE blocker <> target
-       AND NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(blocker) }
+     WHERE blocker <> target AND NOT blocker.name IN knownNames
      WITH target, count(DISTINCT blocker) AS blockedBy
      OPTIONAL MATCH (c:Course)-[:TEACHES]->(target)
      RETURN target.name AS skill, target.category AS category, blockedBy,
@@ -150,8 +151,10 @@ export async function getLearningPath(personName: string, roleTitle: string): Pr
 // having-count aggregate - Cypher expresses it as one pattern.
 export async function getBridgeSkills(minRoles = 3): Promise<BridgeSkillRow[]> {
   return runQuery<BridgeSkillRow>(
-    `MATCH (s:Skill)-[:PREREQUISITE_OF*1..8]->(needed:Skill)<-[:REQUIRES]-(r:Role)
-     WHERE NOT EXISTS { MATCH (:Role)-[:REQUIRES]->(s) }
+    `MATCH (:Role)-[:REQUIRES]->(directSkill:Skill)
+     WITH collect(DISTINCT directSkill.name) AS directlyRequiredNames
+     MATCH (s:Skill)-[:PREREQUISITE_OF*1..8]->(needed:Skill)<-[:REQUIRES]-(r:Role)
+     WHERE NOT s.name IN directlyRequiredNames
      WITH s, count(DISTINCT r) AS rolesUnlocked, collect(DISTINCT r.title) AS roleTitles
      WHERE rolesUnlocked >= $minRoles
      RETURN s.name AS skill, s.category AS category, rolesUnlocked, roleTitles

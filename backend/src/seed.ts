@@ -50,6 +50,7 @@ const skills: Skill[] = [
   { name: 'Databases', category: 'Backend' },
   { name: 'SQL', category: 'Backend' },
   { name: 'System Design', category: 'Engineering' },
+  { name: 'Programming Fundamentals', category: 'Engineering' },
   { name: 'Linux', category: 'Infrastructure' },
   { name: 'Docker', category: 'Infrastructure' },
   { name: 'Kubernetes', category: 'Infrastructure' },
@@ -70,6 +71,8 @@ const skills: Skill[] = [
 
 // a -> b means "a is a prerequisite of b" (learn a before b)
 const prerequisites: [string, string][] = [
+  ['Programming Fundamentals', 'JavaScript'],
+  ['Programming Fundamentals', 'Python'],
   ['HTML', 'CSS'],
   ['CSS', 'JavaScript'],
   ['JavaScript', 'TypeScript'],
@@ -102,6 +105,7 @@ const prerequisites: [string, string][] = [
 ];
 
 const courses: Course[] = [
+  { title: 'Programming Fundamentals', provider: 'Atlas Academy', hours: 10, teaches: ['Programming Fundamentals'] },
   { title: 'HTML & CSS Foundations', provider: 'Atlas Academy', hours: 8, teaches: ['HTML', 'CSS'] },
   { title: 'JavaScript from Scratch', provider: 'Atlas Academy', hours: 20, teaches: ['JavaScript'] },
   { title: 'TypeScript in Practice', provider: 'CodeForge', hours: 10, teaches: ['TypeScript'] },
