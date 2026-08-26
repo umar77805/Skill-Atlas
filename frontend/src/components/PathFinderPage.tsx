@@ -76,6 +76,18 @@ export default function PathFinderPage() {
               </select>
             </div>
           </div>
+          <div className="demo-note">
+            <span
+              className="info-icon"
+              tabIndex={0}
+              role="img"
+              aria-label="Learner is a demo profile: a fictional person seeded into the database with a fixed set of skills, used to demonstrate the skill-gap and learning-path queries."
+              data-tooltip="Demo profile — seeded with a fixed set of skills for demonstration, not a real user."
+            >
+              i
+            </span>
+            Learners are demo profiles seeded with a fixed set of skills for demonstration, not real users.
+          </div>
         </div>
       )}
 

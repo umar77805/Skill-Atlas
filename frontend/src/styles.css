@@ -583,3 +583,11 @@ button {
 .info-icon:focus-visible::after {
   opacity: 1;
 }
+.demo-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
