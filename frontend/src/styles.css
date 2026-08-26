@@ -264,6 +264,62 @@ button {
   flex-shrink: 0;
 }
 
+/* --- Prerequisite tree diagram: d3-hierarchy layout, root on top --- */
+.tree-scroll {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+}
+
+.tree-canvas { position: relative; flex-shrink: 0; }
+
+.tree-links { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+.tree-links path { fill: none; stroke: var(--line); stroke-width: 1.5px; }
+
+.tree-box {
+  position: absolute;
+  top: 0; left: 0;
+  width: 160px;
+  height: 64px;
+  box-sizing: border-box;
+  padding: 6px 12px;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+.tree-box.root { border-color: var(--violet); border-width: 2px; }
+.tree-box.clickable { cursor: pointer; }
+.tree-box.clickable:hover { border-color: var(--teal); }
+.tree-box .name { font-weight: 500; white-space: normal; line-height: 1.25; }
+.tree-box .category { color: var(--text-faint); font-size: 11px; }
+
+.tree-toggle-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 20px; height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.tree-box.clickable:hover .tree-toggle-indicator { border-color: var(--teal); color: var(--teal); }
+.tree-toggle-indicator.collapsed { background: var(--teal); border-color: var(--teal); color: var(--ink); }
+
 .section-title {
   font-family: var(--mono);
   font-size: 12px;

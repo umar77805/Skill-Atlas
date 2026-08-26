@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.ts';
 import GraphCanvas from './GraphCanvas.tsx';
+import TreeDiagram, { type TreeNodeData } from './TreeDiagram.tsx';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
 import DevInfo from './DevInfo.tsx';
 import type { GraphOverview, SkillSummary, PrerequisiteRow } from '../types.ts';
@@ -48,6 +49,49 @@ export default function AtlasPage() {
       .catch((err) => setChainError(err.message))
       .finally(() => setChainLoading(false));
   };
+
+  const skillTree = useMemo<TreeNodeData | null>(() => {
+    if (!chain || !graph || !selectedSkill) return null;
+
+    const chainNames = new Set(chain.map((r) => r.skill));
+    const categoryByName = new Map(chain.map((r) => [r.skill, r.category]));
+    const rootSummary = skills.find((s) => s.name === selectedSkill);
+    if (rootSummary) categoryByName.set(selectedSkill, rootSummary.category);
+
+    const idToName = new Map<string, string>();
+    for (const [name, id] of nameToId) idToName.set(id, name);
+
+    // Direct PREREQUISITE_OF edges (prerequisite -> unlocked skill), restricted
+    // to skills that are actually part of this chain, so the tree mirrors the
+    // real graph structure rather than just a flat depth ranking.
+    const directPrereqsOf = new Map<string, string[]>();
+    for (const e of graph.edges) {
+      if (e.type !== 'PREREQUISITE_OF') continue;
+      const sourceName = idToName.get(e.source);
+      const targetName = idToName.get(e.target);
+      if (!sourceName || !targetName) continue;
+      const targetInTree = targetName === selectedSkill || chainNames.has(targetName);
+      const sourceInTree = sourceName === selectedSkill || chainNames.has(sourceName);
+      if (!targetInTree || !sourceInTree) continue;
+      const arr = directPrereqsOf.get(targetName) ?? [];
+      arr.push(sourceName);
+      directPrereqsOf.set(targetName, arr);
+    }
+
+    const build = (name: string, ancestry: Set<string>): TreeNodeData => {
+      const nextAncestry = new Set(ancestry).add(name);
+      const kids = (directPrereqsOf.get(name) ?? [])
+        .filter((k) => !ancestry.has(k)) // guard against cycles
+        .sort((a, b) => a.localeCompare(b));
+      return {
+        name,
+        category: categoryByName.get(name) ?? '',
+        children: kids.map((k) => build(k, nextAncestry)),
+      };
+    };
+
+    return build(selectedSkill, new Set());
+  }, [chain, graph, selectedSkill, nameToId, skills]);
 
   const highlighted = useMemo(() => {
     const set = new Set<string>();
@@ -133,18 +177,8 @@ export default function AtlasPage() {
           {chain && chain.length === 0 && (
             <EmptyBlock title="No prerequisites" hint={`${selectedSkill} has no upstream skills — it's a starting point.`} />
           )}
-          {chain && chain.length > 0 && (
-            <ul className="skill-list">
-              {chain.map((row) => (
-                <li className="skill-row" key={row.skill}>
-                  <div>
-                    <div className="name">{row.skill}</div>
-                    <div className="courses">{row.category}</div>
-                  </div>
-                  <span className="depth-badge" title={`${row.depth} hop(s) away`}>{row.depth}</span>
-                </li>
-              ))}
-            </ul>
+          {chain && chain.length > 0 && skillTree && (
+            <TreeDiagram key={selectedSkill} root={skillTree} />
           )}
 
           {chain && chain.length > 0 && (
