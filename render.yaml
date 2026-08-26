@@ -17,4 +17,4 @@ services:
       - key: COGNODB_PASSWORD
         sync: false
       - key: CORS_ORIGIN
-        value: https://REPLACE-WITH-NETLIFY-URL.netlify.app
+        value: https://skillatlas.netlify.app/
