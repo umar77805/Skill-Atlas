@@ -5,6 +5,7 @@ A graph-backed app for exploring how skills, courses, and career roles connect â
 Given a target skill, it traces every prerequisite that leads to it. Given a learner and a target role, it computes the skill gap and orders the missing skills into a learnable sequence. And it surfaces "bridge skills" â€” foundational skills that no role lists directly, but that quietly unlock several roles at once.
 
 > Live demo: **https://skillatlas.netlify.app**
+> Screen Recording: **https://drive.google.com/file/d/1JqN9y4LGlQubAoPVyb-r9SjEAHat5cns/view?usp=sharing**
 
 ---
 
