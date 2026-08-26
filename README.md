@@ -4,8 +4,7 @@ A graph-backed app for exploring how skills, courses, and career roles connect â
 
 Given a target skill, it traces every prerequisite that leads to it. Given a learner and a target role, it computes the skill gap and orders the missing skills into a learnable sequence. And it surfaces "bridge skills" â€” foundational skills that no role lists directly, but that quietly unlock several roles at once.
 
-> Live demo: **\<add your hosted URL here\>**
-> Screen recording: **\<add your recording link here\>**
+> Live demo: **https://skillatlas.netlify.app/insights**
 
 ---
 
@@ -154,7 +153,11 @@ All four queries run through the official `neo4j-driver` with parameters (`$skil
 
 ## Screenshots
 
-_Add screenshots of the Atlas, Path Finder, and Insights pages here after running the app against your CognoDB instance._
+<img width="2542" height="1262" alt="image" src="https://github.com/user-attachments/assets/cf352f6e-5d43-4fa4-9835-47e0a19caf04" />
+<img width="2553" height="1277" alt="image" src="https://github.com/user-attachments/assets/f64e56ce-b2b9-40d8-a0c0-999efbe0fcef" />
+<img width="2551" height="1272" alt="image" src="https://github.com/user-attachments/assets/883103ca-2a9d-4109-8960-a97b6aa9832a" />
+<img width="2547" height="1260" alt="image" src="https://github.com/user-attachments/assets/c858d1a8-b381-4bcd-8084-7703c1c3bd48" />
+<img width="2541" height="1266" alt="image" src="https://github.com/user-attachments/assets/5a1fb5e9-bb5f-4e91-8a4e-33d4ce760b57" />
 
 ---
 
