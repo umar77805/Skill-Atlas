@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: skill-atlas-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.18.0
+      - key: COGNODB_URI
+        sync: false
+      - key: COGNODB_USER
+        sync: false
+      - key: COGNODB_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://REPLACE-WITH-NETLIFY-URL.netlify.app
