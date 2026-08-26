@@ -69,6 +69,7 @@ skill-atlas/
         └── components/
             ├── AtlasPage.tsx        graph explorer + prerequisite chain
             ├── PathFinderPage.tsx   skill gap + learning path
+            ├── AddYourselfModal.tsx enter a name + skills to simulate a gap, session-only
             ├── InsightsPage.tsx     bridge-skill query
             └── GraphCanvas.tsx      force-directed SVG rendering
 ```
@@ -134,6 +135,8 @@ WITH target, count(DISTINCT blocker) AS blockedBy
 RETURN target.name AS skill, blockedBy ORDER BY blockedBy ASC
 ```
 For each missing skill, counts how many *other* missing skills still stand in front of it (via the same variable-length prerequisite path). Sorting by that count gives a learnable order without ever materialising a full topological sort.
+
+Both queries have a sibling (`getSkillGapForSkills` / `getLearningPathForSkills`) that takes a plain list of skill names — `WITH $skillNames AS knownNames` — instead of matching a `Person` node. It powers the "add yourself" flow in Path Finder: a visitor types a name and picks skills client-side, and the same gap/path logic runs against that ad-hoc list. Since it never matches `:Person`, it can't write anything — the simulated profile lives only in the browser tab and disappears on reload.
 
 ### 4. Bridge skills (the hidden foundations)
 ```cypher

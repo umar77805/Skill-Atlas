@@ -424,7 +424,9 @@ button {
   line-height: 1.6;
   margin: 0 0 22px;
 }
-.modal-actions { display: flex; justify-content: flex-end; }
+.modal-wide { max-width: 560px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.modal-actions.split { justify-content: space-between; }
 .modal-cta {
   font-family: var(--body);
   font-size: 13.5px;
@@ -436,6 +438,30 @@ button {
   color: var(--ink);
 }
 .modal-cta:hover { opacity: 0.9; }
+.modal-cta-ghost {
+  font-family: var(--body);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-dim);
+}
+.modal-cta-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+
+.field-error { color: var(--coral); font-size: 12px; margin: -8px 0 12px; }
+
+.skill-picker-scroll { max-height: 320px; overflow-y: auto; padding-right: 4px; margin-bottom: 20px; }
+.skill-picker-group { margin-bottom: 12px; }
+.skill-picker-group-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
 
 /* --- Graph canvas --- */
 
@@ -551,6 +577,7 @@ button {
   font-size: 10px;
   cursor: help;
 }
+.info-icon.actionable { cursor: pointer; font-size: 13px; }
 .info-icon:hover,
 .info-icon:focus-visible {
   color: var(--ink);

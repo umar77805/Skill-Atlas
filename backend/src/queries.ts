@@ -143,6 +143,38 @@ export async function getLearningPath(personName: string, roleTitle: string): Pr
   );
 }
 
+// --- Same two queries, but against an ad-hoc skill list instead of a stored
+// Person node - used for the "simulate your own skills" flow in the UI. Never
+// matches a :Person, so it's structurally incapable of writing anything.
+export async function getSkillGapForSkills(skillNames: string[], roleTitle: string): Promise<SkillGapRow[]> {
+  return runQuery<SkillGapRow>(
+    `WITH $skillNames AS knownNames
+     MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
+     WHERE NOT s.name IN knownNames
+     OPTIONAL MATCH (c:Course)-[:TEACHES]->(s)
+     RETURN s.name AS skill, s.category AS category, req.importance AS importance,
+            collect(DISTINCT c.title) AS courses
+     ORDER BY req.importance, s.name`,
+    { skillNames, roleTitle }
+  );
+}
+
+export async function getLearningPathForSkills(skillNames: string[], roleTitle: string): Promise<LearningPathRow[]> {
+  return runQuery<LearningPathRow>(
+    `WITH $skillNames AS knownNames
+     MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
+     WHERE NOT target.name IN knownNames
+     OPTIONAL MATCH (blocker:Skill)-[:PREREQUISITE_OF*1..8]->(target)
+     WHERE blocker <> target AND NOT blocker.name IN knownNames
+     WITH target, count(DISTINCT blocker) AS blockedBy
+     OPTIONAL MATCH (c:Course)-[:TEACHES]->(target)
+     RETURN target.name AS skill, target.category AS category, blockedBy,
+            collect(DISTINCT c.title) AS courses
+     ORDER BY blockedBy ASC, target.name`,
+    { skillNames, roleTitle }
+  );
+}
+
 // --- Requirement 5.1: query a relational DB would find awkward -------------
 // "Bridge skills": skills that sit upstream (at any depth) of skills required
 // by many different roles, but are never *directly* required by any role

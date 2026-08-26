@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.ts';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
 import DevInfo from './DevInfo.tsx';
+import AddYourselfModal, { type SimulatedProfile } from './AddYourselfModal.tsx';
 import type { PersonSummary, RoleSummary, SkillGapRow, LearningPathRow } from '../types.ts';
+
+const SIMULATED_VALUE = '__simulated__';
 
 export default function PathFinderPage() {
   const [people, setPeople] = useState<PersonSummary[]>([]);
@@ -11,6 +14,9 @@ export default function PathFinderPage() {
 
   const [person, setPerson] = useState('');
   const [role, setRole] = useState('');
+
+  const [simulatedProfile, setSimulatedProfile] = useState<SimulatedProfile | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const [gap, setGap] = useState<SkillGapRow[] | null>(null);
   const [path, setPath] = useState<LearningPathRow[] | null>(null);
@@ -36,7 +42,11 @@ export default function PathFinderPage() {
     if (!p || !r) return;
     setLoading(true);
     setError(null);
-    Promise.all([api.gap(r, p), api.path(r, p)])
+    const useSimulated = p === SIMULATED_VALUE && simulatedProfile;
+    const request = useSimulated
+      ? Promise.all([api.gapForSkills(r, simulatedProfile.skills), api.pathForSkills(r, simulatedProfile.skills)])
+      : Promise.all([api.gap(r, p), api.path(r, p)]);
+    request
       .then(([g, path_]) => { setGap(g); setPath(path_); })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -45,7 +55,10 @@ export default function PathFinderPage() {
   useEffect(() => {
     if (person && role) runQuery(person, role);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [person, role]);
+  }, [person, role, simulatedProfile]);
+
+  const isSimulated = person === SIMULATED_VALUE && !!simulatedProfile;
+  const displayName = isSimulated ? simulatedProfile!.name : person;
 
   return (
     <div>
@@ -65,9 +78,23 @@ export default function PathFinderPage() {
           <div className="field-row" style={{ marginBottom: 0 }}>
             <div className="field">
               <label htmlFor="person-select">Learner</label>
-              <select id="person-select" value={person} onChange={(e) => setPerson(e.target.value)}>
-                {people.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
-              </select>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <select id="person-select" value={person} onChange={(e) => setPerson(e.target.value)}>
+                  {people.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+                  {simulatedProfile && <option value={SIMULATED_VALUE}>{simulatedProfile.name} (you)</option>}
+                </select>
+                <span
+                  className="info-icon actionable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={simulatedProfile ? 'Edit your simulated skill profile' : 'Add your own skills'}
+                  data-tooltip={simulatedProfile ? 'Edit your simulated profile' : 'Add yourself and simulate your own skill gap'}
+                  onClick={() => setModalOpen(true)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setModalOpen(true); }}
+                >
+                  +
+                </span>
+              </div>
             </div>
             <div className="field">
               <label htmlFor="role-select">Target role</label>
@@ -77,18 +104,51 @@ export default function PathFinderPage() {
             </div>
           </div>
           <div className="demo-note">
-            <span
-              className="info-icon"
-              tabIndex={0}
-              role="img"
-              aria-label="Learner is a demo profile: a fictional person seeded into the database with a fixed set of skills, used to demonstrate the skill-gap and learning-path queries."
-              data-tooltip="Demo profile — seeded with a fixed set of skills for demonstration, not a real user."
-            >
-              i
-            </span>
-            Learners are demo profiles seeded with a fixed set of skills for demonstration, not real users.
+            {isSimulated ? (
+              <>
+                <span
+                  className="info-icon"
+                  tabIndex={0}
+                  role="img"
+                  aria-label="This is your own entered skill list for this session only — it is never saved to the database."
+                  data-tooltip="Simulated profile — your own skill picks, session-only, never written to the database."
+                >
+                  i
+                </span>
+                This is your own skill list, entered for this session only — nothing is saved to the database.
+              </>
+            ) : (
+              <>
+                <span
+                  className="info-icon"
+                  tabIndex={0}
+                  role="img"
+                  aria-label="Learner is a demo profile: a fictional person seeded into the database with a fixed set of skills, used to demonstrate the skill-gap and learning-path queries."
+                  data-tooltip="Demo profile — seeded with a fixed set of skills for demonstration, not a real user."
+                >
+                  i
+                </span>
+                Learners are demo profiles seeded with a fixed set of skills for demonstration, not real users.
+              </>
+            )}
           </div>
         </div>
+      )}
+
+      {modalOpen && (
+        <AddYourselfModal
+          existingProfile={simulatedProfile}
+          onClose={() => setModalOpen(false)}
+          onSave={(profile) => { setSimulatedProfile(profile); setPerson(SIMULATED_VALUE); setModalOpen(false); }}
+          onRemove={() => {
+            setSimulatedProfile(null);
+            setModalOpen(false);
+            if (person === SIMULATED_VALUE) {
+              setPerson(people[0]?.name ?? '');
+              if (people[0]?.targetRole) setRole(people[0].targetRole);
+            }
+          }}
+        />
       )}
 
       {loading && <LoadingBlock label="Comparing skills against the role…" />}
@@ -99,7 +159,7 @@ export default function PathFinderPage() {
           <div className="panel">
             <div className="section-title">Missing skills, learning order</div>
             {path && path.length === 0 && (
-              <EmptyBlock title="No gap" hint={`${person} already has every skill ${role} requires. 🎉`} />
+              <EmptyBlock title="No gap" hint={`${displayName} already has every skill ${role} requires. 🎉`} />
             )}
             {path && path.length > 0 && (
               <ul className="skill-list">
@@ -150,12 +210,20 @@ export default function PathFinderPage() {
               learnable order without ever materialising a full topological sort.
             </p>
             <div className="section-title">Skill gap</div>
-            <div className="query-box">{`MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
+            <div className="query-box">{isSimulated ? `MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
+WHERE NOT s.name IN $skillNames
+OPTIONAL MATCH (c:Course)-[:TEACHES]->(s)
+RETURN s.name AS skill, req.importance AS importance, collect(DISTINCT c.title) AS courses` : `MATCH (r:Role {title: $roleTitle})-[req:REQUIRES]->(s:Skill)
 WHERE NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(s) }
 OPTIONAL MATCH (c:Course)-[:TEACHES]->(s)
 RETURN s.name AS skill, req.importance AS importance, collect(DISTINCT c.title) AS courses`}</div>
             <div className="section-title" style={{ marginTop: 16 }}>Ordered learning path</div>
-            <div className="query-box">{`MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
+            <div className="query-box">{isSimulated ? `MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
+WHERE NOT target.name IN $skillNames
+OPTIONAL MATCH (blocker:Skill)-[:PREREQUISITE_OF*1..8]->(target)
+WHERE NOT blocker.name IN $skillNames
+WITH target, count(DISTINCT blocker) AS blockedBy
+RETURN target.name AS skill, blockedBy ORDER BY blockedBy ASC` : `MATCH (r:Role {title: $roleTitle})-[:REQUIRES]->(target:Skill)
 WHERE NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(target) }
 OPTIONAL MATCH (blocker:Skill)-[:PREREQUISITE_OF*1..8]->(target)
 WHERE NOT EXISTS { MATCH (:Person {name: $personName})-[:HAS_SKILL]->(blocker) }

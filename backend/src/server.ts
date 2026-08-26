@@ -46,13 +46,25 @@ app.get('/api/health', async (_req, res) => {
 app.get('/api/skills', handle(() => q.listSkills()));
 app.get('/api/skills/:name/prerequisites', handle((req) => q.getPrerequisiteChain(req.params.name as string)));
 
+function normalizeSkillsParam(raw: unknown): string[] {
+  if (raw === undefined) return [];
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr.map((v) => String(v)).filter((v) => v.length > 0);
+}
+
 app.get('/api/roles', handle(() => q.listRoles()));
 app.get('/api/roles/:title/gap', handle((req) => {
+  if (req.query.mode === 'skills') {
+    return q.getSkillGapForSkills(normalizeSkillsParam(req.query.skills), req.params.title as string);
+  }
   const person = req.query.person as string;
   if (!person) throw new Error('Missing required query param: person');
   return q.getSkillGap(person, req.params.title as string);
 }));
 app.get('/api/roles/:title/path', handle((req) => {
+  if (req.query.mode === 'skills') {
+    return q.getLearningPathForSkills(normalizeSkillsParam(req.query.skills), req.params.title as string);
+  }
   const person = req.query.person as string;
   if (!person) throw new Error('Missing required query param: person');
   return q.getLearningPath(person, req.params.title as string);
