@@ -3,6 +3,7 @@ import { NavLink } from 'react-router';
 import { api } from './api.ts';
 import AppRoutes from './routes.tsx';
 import { useDevMode } from './DevModeContext.tsx';
+import StartupScreen from './components/StartupScreen.tsx';
 
 const TOGGLE_SEEN_KEY = 'skillatlas.devToggleSeen';
 
@@ -26,6 +27,10 @@ export default function App() {
       .catch(() => !cancelled && setConnected(false));
     return () => { cancelled = true; };
   }, []);
+
+  if (connected === null) {
+    return <StartupScreen />;
+  }
 
   return (
     <div className="shell">
