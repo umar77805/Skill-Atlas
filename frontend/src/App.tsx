@@ -3,7 +3,6 @@ import { NavLink } from 'react-router';
 import { api } from './api.ts';
 import AppRoutes from './routes.tsx';
 import { useDevMode } from './DevModeContext.tsx';
-import AssignmentNotice from './components/AssignmentNotice.tsx';
 
 const TOGGLE_SEEN_KEY = 'skillatlas.devToggleSeen';
 
@@ -30,7 +29,6 @@ export default function App() {
 
   return (
     <div className="shell">
-      <AssignmentNotice />
       <nav className="nav-rail">
         <div className="brand">
           <div className="brand-mark">Skill<span>Atlas</span></div>
