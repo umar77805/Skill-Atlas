@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { api } from '../api.ts';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { skillsOptions } from '../queries.ts';
 import { LoadingBlock, ErrorBlock } from './StateBlock.tsx';
 import type { SkillSummary } from '../types.ts';
 
@@ -20,16 +21,8 @@ export default function AddYourselfModal({ existingProfile, onClose, onSave, onR
   const [nameError, setNameError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set(existingProfile?.skills ?? []));
 
-  const [allSkills, setAllSkills] = useState<SkillSummary[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const loadSkills = () => {
-    setAllSkills(null);
-    setLoadError(null);
-    api.skills().then(setAllSkills).catch((err) => setLoadError(err.message));
-  };
-
-  useEffect(loadSkills, []);
+  const { data: allSkills, isError, error, refetch } = useQuery(skillsOptions);
+  const loadError = isError ? (error as Error).message : null;
 
   const grouped = useMemo(() => {
     const map = new Map<string, SkillSummary[]>();
@@ -80,7 +73,7 @@ export default function AddYourselfModal({ existingProfile, onClose, onSave, onR
         </div>
         {nameError && <div className="field-error">{nameError}</div>}
 
-        {loadError && <ErrorBlock message={loadError} onRetry={loadSkills} />}
+        {loadError && <ErrorBlock message={loadError} onRetry={() => refetch()} />}
         {!loadError && !allSkills && <LoadingBlock label="Loading skills…" />}
         {allSkills && (
           <div className="skill-picker-scroll">

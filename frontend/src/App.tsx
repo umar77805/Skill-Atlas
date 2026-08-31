@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { NavLink } from 'react-router';
-import { api } from './api.ts';
+import { useQuery } from '@tanstack/react-query';
+import { healthOptions } from './queries.ts';
 import AppRoutes from './routes.tsx';
 import { useDevMode } from './DevModeContext.tsx';
 import StartupScreen from './components/StartupScreen.tsx';
@@ -9,7 +10,8 @@ import InfoIcon from './components/InfoIcon.tsx';
 const TOGGLE_SEEN_KEY = 'skillatlas.devToggleSeen';
 
 export default function App() {
-  const [connected, setConnected] = useState<boolean | null>(null); // null = checking
+  const { data, isPending, isError } = useQuery(healthOptions);
+  const connected: boolean | null = isPending ? null : isError ? false : !!data?.connected;
   const { devMode, setDevMode } = useDevMode();
   const [toggleSeen, setToggleSeen] = useState(() => localStorage.getItem(TOGGLE_SEEN_KEY) === 'true');
 
@@ -20,14 +22,6 @@ export default function App() {
       setToggleSeen(true);
     }
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    api.health()
-      .then((r) => !cancelled && setConnected(!!r.connected))
-      .catch(() => !cancelled && setConnected(false));
-    return () => { cancelled = true; };
-  }, []);
 
   if (connected === null) {
     return <StartupScreen />;

@@ -1,33 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
-import { api } from '../api.ts';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { graphOptions, skillsOptions, prerequisitesOptions } from '../queries.ts';
 import GraphCanvas from './GraphCanvas.tsx';
 import TreeDiagram, { type TreeNodeData } from './TreeDiagram.tsx';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
 import DevInfo from './DevInfo.tsx';
-import type { GraphOverview, SkillSummary, PrerequisiteRow } from '../types.ts';
 
 const ALL_LABELS = ['Skill', 'Role', 'Course'];
 
 export default function AtlasPage() {
-  const [graph, setGraph] = useState<GraphOverview | null>(null);
-  const [graphError, setGraphError] = useState<string | null>(null);
-  const [skills, setSkills] = useState<SkillSummary[]>([]);
   const [visibleLabels, setVisibleLabels] = useState<Set<string>>(new Set(['Skill', 'Role']));
-
   const [selectedSkill, setSelectedSkill] = useState('');
-  const [chain, setChain] = useState<PrerequisiteRow[] | null>(null);
-  const [chainLoading, setChainLoading] = useState(false);
-  const [chainError, setChainError] = useState<string | null>(null);
 
-  const loadGraph = () => {
-    setGraph(null);
-    setGraphError(null);
-    Promise.all([api.graph(), api.skills()])
-      .then(([g, s]) => { setGraph(g); setSkills(s); })
-      .catch((err) => setGraphError(err.message));
-  };
+  const graphQuery = useQuery(graphOptions);
+  const skillsQuery = useQuery(skillsOptions);
+  const graph = graphQuery.data ?? null;
+  const skills = skillsQuery.data ?? [];
+  const graphError = graphQuery.isError
+    ? (graphQuery.error as Error).message
+    : skillsQuery.isError
+      ? (skillsQuery.error as Error).message
+      : null;
+  const reloadGraph = () => { graphQuery.refetch(); skillsQuery.refetch(); };
 
-  useEffect(loadGraph, []);
+  const chainQuery = useQuery(prerequisitesOptions(selectedSkill));
+  const chain = chainQuery.data ?? null;
+  const chainLoading = chainQuery.isFetching;
+  const chainError = chainQuery.isError ? (chainQuery.error as Error).message : null;
 
   const nameToId = useMemo(() => {
     const map = new Map<string, string>();
@@ -37,18 +36,6 @@ export default function AtlasPage() {
     }
     return map;
   }, [graph]);
-
-  const loadChain = (skillName: string) => {
-    setSelectedSkill(skillName);
-    setChain(null);
-    setChainError(null);
-    if (!skillName) return;
-    setChainLoading(true);
-    api.prerequisites(skillName)
-      .then(setChain)
-      .catch((err) => setChainError(err.message))
-      .finally(() => setChainLoading(false));
-  };
 
   const skillTree = useMemo<TreeNodeData | null>(() => {
     if (!chain || !graph || !selectedSkill) return null;
@@ -125,7 +112,7 @@ export default function AtlasPage() {
 
       <div className="grid-2">
         <div className="panel graph-panel">
-          {graphError && <ErrorBlock message={graphError} onRetry={loadGraph} />}
+          {graphError && <ErrorBlock message={graphError} onRetry={reloadGraph} />}
           {!graphError && !graph && <LoadingBlock label="Charting the atlas…" />}
           {graph && (
             <GraphCanvas
@@ -134,7 +121,7 @@ export default function AtlasPage() {
               highlighted={highlighted}
               selectedId={nameToId.get(selectedSkill)}
               visibleLabels={visibleLabels}
-              onNodeClick={(n) => n.label === 'Skill' && n.name && loadChain(n.name === selectedSkill ? '' : n.name)}
+              onNodeClick={(n) => n.label === 'Skill' && n.name && setSelectedSkill(n.name === selectedSkill ? '' : n.name)}
             />
           )}
           <div className="filter-toggles">
@@ -160,7 +147,7 @@ export default function AtlasPage() {
           <div className="field-row">
             <div className="field">
               <label htmlFor="skill-select">Target skill</label>
-              <select id="skill-select" value={selectedSkill} onChange={(e) => loadChain(e.target.value)}>
+              <select id="skill-select" value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)}>
                 <option value="">Choose a skill…</option>
                 {skills.map((s) => (
                   <option key={s.name} value={s.name}>{s.name}</option>
@@ -173,7 +160,7 @@ export default function AtlasPage() {
             <EmptyBlock title="No skill selected" hint="Pick a skill from the dropdown or click a node in the atlas." />
           )}
           {chainLoading && <LoadingBlock label="Walking the prerequisite chain…" />}
-          {chainError && <ErrorBlock message={chainError} onRetry={() => loadChain(selectedSkill)} />}
+          {chainError && <ErrorBlock message={chainError} onRetry={() => chainQuery.refetch()} />}
           {chain && chain.length === 0 && (
             <EmptyBlock title="No prerequisites" hint={`${selectedSkill} has no upstream skills — it's a starting point.`} />
           )}

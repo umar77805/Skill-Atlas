@@ -1,62 +1,55 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.ts';
+import { useQuery } from '@tanstack/react-query';
+import { peopleOptions, rolesOptions, roleGapOptions, rolePathOptions, type LearnerKey } from '../queries.ts';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
 import DevInfo from './DevInfo.tsx';
 import AddYourselfModal, { type SimulatedProfile } from './AddYourselfModal.tsx';
 import InfoIcon from './InfoIcon.tsx';
-import type { PersonSummary, RoleSummary, SkillGapRow, LearningPathRow } from '../types.ts';
 
 const SIMULATED_VALUE = '__simulated__';
 
 export default function PathFinderPage() {
-  const [people, setPeople] = useState<PersonSummary[]>([]);
-  const [roles, setRoles] = useState<RoleSummary[]>([]);
-  const [listError, setListError] = useState<string | null>(null);
+  const peopleQuery = useQuery(peopleOptions);
+  const rolesQuery = useQuery(rolesOptions);
+  const people = peopleQuery.data ?? [];
+  const roles = rolesQuery.data ?? [];
+  const listError = peopleQuery.isError
+    ? (peopleQuery.error as Error).message
+    : rolesQuery.isError
+      ? (rolesQuery.error as Error).message
+      : null;
+  const reloadLists = () => { peopleQuery.refetch(); rolesQuery.refetch(); };
 
   const [person, setPerson] = useState('');
   const [role, setRole] = useState('');
 
+  useEffect(() => {
+    if (!peopleQuery.data || !rolesQuery.data || person) return;
+    const p = peopleQuery.data[0];
+    if (p) setPerson(p.name);
+    if (p?.targetRole) setRole(p.targetRole);
+    else if (rolesQuery.data[0]) setRole(rolesQuery.data[0].title);
+  }, [peopleQuery.data, rolesQuery.data, person]);
+
   const [simulatedProfile, setSimulatedProfile] = useState<SimulatedProfile | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [gap, setGap] = useState<SkillGapRow[] | null>(null);
-  const [path, setPath] = useState<LearningPathRow[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const learner: LearnerKey | null = !person
+    ? null
+    : person === SIMULATED_VALUE && simulatedProfile
+      ? { kind: 'simulated', skills: simulatedProfile.skills }
+      : person !== SIMULATED_VALUE
+        ? { kind: 'person', person }
+        : null;
 
-  const loadLists = () => {
-    setListError(null);
-    Promise.all([api.people(), api.roles()])
-      .then(([p, r]) => {
-        setPeople(p);
-        setRoles(r);
-        if (p[0]) setPerson(p[0].name);
-        if (p[0]?.targetRole) setRole(p[0].targetRole);
-        else if (r[0]) setRole(r[0].title);
-      })
-      .catch((err) => setListError(err.message));
-  };
-
-  useEffect(loadLists, []);
-
-  const runQuery = (p: string = person, r: string = role) => {
-    if (!p || !r) return;
-    setLoading(true);
-    setError(null);
-    const useSimulated = p === SIMULATED_VALUE && simulatedProfile;
-    const request = useSimulated
-      ? Promise.all([api.gapForSkills(r, simulatedProfile.skills), api.pathForSkills(r, simulatedProfile.skills)])
-      : Promise.all([api.gap(r, p), api.path(r, p)]);
-    request
-      .then(([g, path_]) => { setGap(g); setPath(path_); })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    if (person && role) runQuery(person, role);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [person, role, simulatedProfile]);
+  const gapQuery = useQuery(roleGapOptions(role, learner));
+  const pathQuery = useQuery(rolePathOptions(role, learner));
+  const gap = gapQuery.data;
+  const path = pathQuery.data;
+  const loading = gapQuery.isFetching || pathQuery.isFetching;
+  const queryError = gapQuery.error ?? pathQuery.error;
+  const error = queryError ? (queryError as Error).message : null;
+  const rerunQuery = () => { gapQuery.refetch(); pathQuery.refetch(); };
 
   const isSimulated = person === SIMULATED_VALUE && !!simulatedProfile;
   const displayName = isSimulated ? simulatedProfile!.name : person;
@@ -72,7 +65,7 @@ export default function PathFinderPage() {
         </p>
       </div>
 
-      {listError && <ErrorBlock message={listError} onRetry={loadLists} />}
+      {listError && <ErrorBlock message={listError} onRetry={reloadLists} />}
 
       {!listError && (
         <div className="panel" style={{ marginBottom: 20 }}>
@@ -143,7 +136,7 @@ export default function PathFinderPage() {
       )}
 
       {loading && <LoadingBlock label="Comparing skills against the role…" />}
-      {error && <ErrorBlock message={error} onRetry={() => runQuery()} />}
+      {error && <ErrorBlock message={error} onRetry={rerunQuery} />}
 
       {!loading && !error && gap && (
         <div className="grid-2">

@@ -1,27 +1,14 @@
-import { useEffect, useState } from 'react';
-import { api } from '../api.ts';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { bridgeSkillsOptions } from '../queries.ts';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
 import DevInfo from './DevInfo.tsx';
 import { useDevMode } from '../DevModeContext.tsx';
-import type { BridgeSkillRow } from '../types.ts';
 
 export default function InsightsPage() {
   const { devMode } = useDevMode();
   const [minRoles, setMinRoles] = useState(3);
-  const [rows, setRows] = useState<BridgeSkillRow[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = () => {
-    setLoading(true);
-    setError(null);
-    api.bridgeSkills(minRoles)
-      .then(setRows)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(load, [minRoles]);
+  const { data: rows, isFetching: loading, error, refetch } = useQuery(bridgeSkillsOptions(minRoles));
 
   return (
     <div>
@@ -51,7 +38,7 @@ export default function InsightsPage() {
         <div className="panel">
           <div className="section-title">Results</div>
           {loading && <LoadingBlock label="Scanning role requirements…" />}
-          {error && <ErrorBlock message={error} onRetry={load} />}
+          {error && <ErrorBlock message={(error as Error).message} onRetry={() => refetch()} />}
           {rows && rows.length === 0 && (
             <EmptyBlock title="No bridge skills at this threshold" hint="Try lowering the minimum roles unlocked." />
           )}
