@@ -140,6 +140,16 @@ export default function AtlasPage() {
             <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--panel-raised)', border: '1.5px solid var(--teal)' }} /> Skill</div>
             <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--amber)' }} /> Role</div>
           </div>
+
+          {chain && chain.length > 0 && (
+            <DevInfo>
+              <div className="section-title">Cypher behind this</div>
+              <div className="query-box">{`MATCH path = (root:Skill)-[:PREREQUISITE_OF*1..8]->(target:Skill {name: $skillName})
+WITH root, min(length(path)) AS depth
+RETURN root.name AS skill, depth
+ORDER BY depth`}</div>
+            </DevInfo>
+          )}
         </div>
 
         <div className="panel">
@@ -166,16 +176,6 @@ export default function AtlasPage() {
           )}
           {chain && chain.length > 0 && skillTree && (
             <TreeDiagram key={selectedSkill} root={skillTree} />
-          )}
-
-          {chain && chain.length > 0 && (
-            <DevInfo>
-              <div className="section-title">Cypher behind this</div>
-              <div className="query-box">{`MATCH path = (root:Skill)-[:PREREQUISITE_OF*1..8]->(target:Skill {name: $skillName})
-WITH root, min(length(path)) AS depth
-RETURN root.name AS skill, depth
-ORDER BY depth`}</div>
-            </DevInfo>
           )}
         </div>
       </div>
