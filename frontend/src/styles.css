@@ -649,6 +649,12 @@ button {
   opacity: 1;
 }
 
+.graph-node {
+  transition: opacity 0.3s ease;
+}
+.graph-node.dimmed { opacity: 0.3; }
+.graph-edge.dimmed { opacity: 0.12; }
+
 .graph-node circle {
   fill: var(--panel-raised);
   stroke: var(--text-faint);
