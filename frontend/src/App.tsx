@@ -4,6 +4,7 @@ import { api } from './api.ts';
 import AppRoutes from './routes.tsx';
 import { useDevMode } from './DevModeContext.tsx';
 import StartupScreen from './components/StartupScreen.tsx';
+import InfoIcon from './components/InfoIcon.tsx';
 
 const TOGGLE_SEEN_KEY = 'skillatlas.devToggleSeen';
 
@@ -64,15 +65,10 @@ export default function App() {
             >
               Dev info: {devMode ? 'On' : 'Off'}
             </button>
-            <span
-              className="info-icon"
-              tabIndex={0}
-              role="img"
-              aria-label="Dev info toggle: when on, each page shows the raw Cypher query behind its results."
-              data-tooltip="When on, each page shows the raw Cypher query behind its results."
-            >
-              i
-            </span>
+            <InfoIcon
+              ariaLabel="Dev info toggle: when on, each page shows the raw Cypher query behind its results."
+              tooltip="When on, each page shows the raw Cypher query behind its results."
+            />
           </div>
         </div>
       </nav>

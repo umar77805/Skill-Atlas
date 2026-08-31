@@ -3,6 +3,7 @@ import { api } from '../api.ts';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from './StateBlock.tsx';
 import DevInfo from './DevInfo.tsx';
 import AddYourselfModal, { type SimulatedProfile } from './AddYourselfModal.tsx';
+import InfoIcon from './InfoIcon.tsx';
 import type { PersonSummary, RoleSummary, SkillGapRow, LearningPathRow } from '../types.ts';
 
 const SIMULATED_VALUE = '__simulated__';
@@ -78,7 +79,7 @@ export default function PathFinderPage() {
           <div className="field-row" style={{ marginBottom: 0 }}>
             <div className="field">
               <label htmlFor="person-select">Learner</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div className="field-inline-row">
                 <select id="person-select" value={person} onChange={(e) => setPerson(e.target.value)}>
                   {people.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
                   {simulatedProfile && <option value={SIMULATED_VALUE}>{simulatedProfile.name} (you)</option>}
@@ -106,28 +107,18 @@ export default function PathFinderPage() {
           <div className="demo-note">
             {isSimulated ? (
               <>
-                <span
-                  className="info-icon"
-                  tabIndex={0}
-                  role="img"
-                  aria-label="This is your own entered skill list for this session only — it is never saved to the database."
-                  data-tooltip="Simulated profile — your own skill picks, session-only, never written to the database."
-                >
-                  i
-                </span>
+                <InfoIcon
+                  ariaLabel="This is your own entered skill list for this session only — it is never saved to the database."
+                  tooltip="Simulated profile — your own skill picks, session-only, never written to the database."
+                />
                 This is your own skill list, entered for this session only — nothing is saved to the database.
               </>
             ) : (
               <>
-                <span
-                  className="info-icon"
-                  tabIndex={0}
-                  role="img"
-                  aria-label="Learner is a demo profile: a fictional person seeded into the database with a fixed set of skills, used to demonstrate the skill-gap and learning-path queries."
-                  data-tooltip="Demo profile — seeded with a fixed set of skills for demonstration, not a real user."
-                >
-                  i
-                </span>
+                <InfoIcon
+                  ariaLabel="Learner is a demo profile: a fictional person seeded into the database with a fixed set of skills, used to demonstrate the skill-gap and learning-path queries."
+                  tooltip="Demo profile — seeded with a fixed set of skills for demonstration, not a real user."
+                />
                 Learners are demo profiles seeded with a fixed set of skills for demonstration, not real users.
               </>
             )}

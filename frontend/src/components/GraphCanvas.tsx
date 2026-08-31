@@ -120,6 +120,20 @@ export default function GraphCanvas({ nodes, edges, highlighted, selectedId, onN
 
   useEffect(() => () => wheelCleanupRef.current?.(), []);
 
+  // Wheel-based zoom never fires on touch, so this gives touch users an
+  // equivalent - anchored at the viewBox center since a button press has no
+  // cursor position to anchor to (unlike the wheel handler above).
+  const zoomByFactor = useCallback((factor: number) => {
+    const sx = WIDTH / 2;
+    const sy = HEIGHT / 2;
+    setTransform((t) => {
+      const nextK = clamp(t.k * factor, MIN_ZOOM, MAX_ZOOM);
+      const worldX = (sx - t.x) / t.k;
+      const worldY = (sy - t.y) / t.k;
+      return { k: nextK, x: sx - worldX * nextK, y: sy - worldY * nextK };
+    });
+  }, []);
+
   const handleBackgroundPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     setPanning(true);
@@ -198,6 +212,26 @@ export default function GraphCanvas({ nodes, edges, highlighted, selectedId, onN
       >
         Reset view
       </button>
+      <div className="graph-zoom-controls">
+        <button
+          type="button"
+          className="graph-zoom-btn"
+          onClick={() => zoomByFactor(1.3)}
+          aria-label="Zoom in"
+          title="Zoom in"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="graph-zoom-btn"
+          onClick={() => zoomByFactor(1 / 1.3)}
+          aria-label="Zoom out"
+          title="Zoom out"
+        >
+          −
+        </button>
+      </div>
       <svg
         ref={setSvgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -244,6 +278,7 @@ export default function GraphCanvas({ nodes, edges, highlighted, selectedId, onN
                   aria-label={displayName}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onNodeClick?.(n)}
                 >
+                  <circle className="graph-node-hit" r={22} />
                   <circle r={isSelected ? style.r + 3 : style.r} />
                   <text x={style.r + 6} y={4} className="graph-label">{displayName}</text>
                 </g>

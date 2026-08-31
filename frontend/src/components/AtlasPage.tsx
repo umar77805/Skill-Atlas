@@ -158,7 +158,7 @@ export default function AtlasPage() {
         <div className="panel">
           <div className="section-title">Prerequisite chain</div>
           <div className="field-row">
-            <div className="field" style={{ flex: 1 }}>
+            <div className="field">
               <label htmlFor="skill-select">Target skill</label>
               <select id="skill-select" value={selectedSkill} onChange={(e) => loadChain(e.target.value)}>
                 <option value="">Choose a skill…</option>
